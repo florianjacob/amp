@@ -7,30 +7,20 @@ pub mod view;
 mod input;
 mod commands;
 mod helpers;
+mod presenters;
 
 use models::application::Mode;
-use view::{Data, StatusLine};
 use view::terminal::Event;
 
 fn main() {
     let mut application = models::application::new();
 
     loop {
-        // Draw the current application state to the screen.
-        let view_data = match application.workspace.current_buffer() {
-            Some(ref mut buffer) => application.view.buffer_view.data(buffer, &mut application.mode),
-            None => Data{
-                tokens: None,
-                cursor: None,
-                highlight: None,
-                line_count: 0,
-                scrolling_offset: 0,
-                status_line: StatusLine{
-                    content: "".to_string(),
-                    color: None,
-                }
-            },
-        };
+        let view_data = presenters::buffer::data(
+            application.workspace.current_buffer(),
+            &mut application.mode
+        );
+
         match application.mode {
             Mode::Open(ref mode) => view::modes::open::display(&view_data, mode, &application.view),
             Mode::SearchInsert(ref mode) => view::modes::search_insert::display(&view_data, mode, &application.view),
