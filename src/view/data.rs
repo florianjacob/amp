@@ -2,6 +2,7 @@ use rustbox::Color;
 use scribe::buffer::{Position, Range, Token};
 
 pub struct Data {
+    pub buffer_id: usize,
     pub tokens: Option<Vec<Token>>,
     pub cursor: Option<Position>,
     pub highlight: Option<Range>,

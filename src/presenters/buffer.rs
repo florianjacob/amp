@@ -1,3 +1,4 @@
+use helpers;
 use models::application::Mode;
 use view::{Data, StatusLine};
 use scribe::buffer::{Buffer, Range};
@@ -36,6 +37,7 @@ pub fn data(buffer: Option<&mut Buffer>, mode: &mut Mode) -> Data {
             };
 
             Data{
+                buffer_id: helpers::buffer_id(buf),
                 tokens: Some(buf.tokens()),
                 cursor: Some(*buf.cursor.clone()),
                 highlight: highlight,
@@ -48,6 +50,7 @@ pub fn data(buffer: Option<&mut Buffer>, mode: &mut Mode) -> Data {
             }
         }
         None => Data{
+            buffer_id: 0,
             tokens: None,
             cursor: None,
             highlight: None,

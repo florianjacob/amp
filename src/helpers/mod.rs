@@ -34,6 +34,12 @@ pub fn inclusive_range(line_range: &LineRange, buffer: &mut Buffer) -> Range {
     )
 }
 
+// Converts the buffer's path into an owned String.
+// Used as a key for tracking scrollable region offsets.
+pub fn buffer_id(buffer: &Buffer) -> usize {
+    (buffer as *const Buffer) as usize
+}
+
 #[cfg(test)]
 mod tests {
     extern crate scribe;
