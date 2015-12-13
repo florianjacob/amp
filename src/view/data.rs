@@ -7,7 +7,6 @@ pub struct Data {
     pub cursor: Option<Position>,
     pub highlight: Option<Range>,
     pub line_count: usize,
-    pub scrolling_offset: usize,
     pub status_line: StatusLine
 }
 

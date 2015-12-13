@@ -42,7 +42,6 @@ pub fn data(buffer: Option<&mut Buffer>, mode: &mut Mode) -> Data {
                 cursor: Some(*buf.cursor.clone()),
                 highlight: highlight,
                 line_count: buf.data().lines().count(),
-                scrolling_offset: 0,
                 status_line: StatusLine{
                     content: content,
                     color: color
@@ -55,7 +54,6 @@ pub fn data(buffer: Option<&mut Buffer>, mode: &mut Mode) -> Data {
             cursor: None,
             highlight: None,
             line_count: 0,
-            scrolling_offset: 0,
             status_line: StatusLine{
                 content: "".to_string(),
                 color: None,

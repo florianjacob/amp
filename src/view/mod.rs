@@ -62,12 +62,12 @@ impl View {
         let default_offset = 0;
 
         // Get the visible set of tokens.
-        let offset: usize = *self.scroll_offsets.
+        let scroll_offset: usize = *self.scroll_offsets.
             get(&data.buffer_id).
             unwrap_or(&default_offset);
         let visible_range = LineRange::new(
-            offset,
-            self.terminal.height() + offset,
+            scroll_offset,
+            self.terminal.height() + scroll_offset,
         );
         let tokens = match data.tokens {
             Some(ref tokens) => visible_tokens(tokens, visible_range),
@@ -93,6 +93,7 @@ impl View {
         // Others will be drawn following newline characters.
         let mut offset = self.draw_line_number(
             0,
+            scroll_offset,
             data,
             line_number_width
         );
@@ -166,6 +167,7 @@ impl View {
                     // Draw leading line number for the new line.
                     offset = self.draw_line_number(
                         line,
+                        scroll_offset,
                         data,
                         line_number_width
                     );
@@ -216,12 +218,12 @@ impl View {
         );
     }
 
-    fn draw_line_number(&self, line: usize, data: &Data, width: usize) -> usize {
+    fn draw_line_number(&self, line: usize, scroll_offset: usize, data: &Data, width: usize) -> usize {
         let mut offset = 0;
 
         // Line numbers are zero-based and relative;
         // get non-zero-based absolute version.
-        let absolute_line = line + data.scrolling_offset + 1;
+        let absolute_line = line + scroll_offset + 1;
 
         // Get left-padded string-based line number.
         let line_number = format!(
