@@ -11,12 +11,16 @@ mod color;
 // Published API
 pub use self::data::{Data, StatusLine};
 
+use helpers;
 use self::terminal::Terminal;
 use view::buffer::BufferView;
-use scribe::buffer::Position;
+
+use std::collections::HashMap;
+use std::ops::Deref;
+
 use pad::PadStr;
 use rustbox::Color;
-use std::ops::Deref;
+use scribe::buffer::{Buffer, LineRange, Position, Token};
 
 const LINE_LENGTH_GUIDE_OFFSET: usize = 80;
 
@@ -29,6 +33,7 @@ pub struct View {
     pub theme: Theme,
     terminal: Terminal,
     pub buffer_view: BufferView,
+    scroll_offsets: HashMap<usize, usize>,
 }
 
 impl Deref for View {
@@ -48,15 +53,24 @@ impl View {
             theme: Theme::Dark,
             terminal: terminal,
             buffer_view: BufferView::new(height),
+            scroll_offsets: HashMap::new(),
         }
     }
 
     pub fn draw_tokens(&self, data: &Data) {
         let mut line = 0;
+        let default_offset = 0;
 
-        // Get the tokens, bailing out if there are none.
+        // Get the visible set of tokens.
+        let offset: usize = *self.scroll_offsets.
+            get(&data.buffer_id).
+            unwrap_or(&default_offset);
+        let visible_range = LineRange::new(
+            offset,
+            self.terminal.height() + offset,
+        );
         let tokens = match data.tokens {
-            Some(ref tokens) => tokens,
+            Some(ref tokens) => visible_tokens(tokens, visible_range),
             None => return,
         };
 
@@ -270,4 +284,57 @@ impl View {
             Theme::Light => Color::White,
         }
     }
+
+    pub fn scroll_up(&mut self, buffer: &Buffer, amount: usize) {
+        let key = helpers::buffer_id(buffer);
+
+        match self.scroll_offsets.get_mut(&key) {
+            Some(offset) => *offset = offset.checked_sub(amount).unwrap_or(0),
+            None => (),
+        }
+    }
+
+    pub fn scroll_down(&mut self, buffer: &Buffer, amount: usize) {
+        let key = helpers::buffer_id(buffer);
+
+        if self.scroll_offsets.contains_key(&key) {
+            match self.scroll_offsets.get_mut(&key) {
+                Some(offset) => *offset = offset.checked_add(amount).unwrap_or(0),
+                None => (),
+            }
+        } else {
+            self.scroll_offsets.insert(key, amount);
+        }
+    }
+}
+
+fn visible_tokens(tokens: &Vec<Token>, visible_range: LineRange) -> Vec<Token> {
+    let mut visible_tokens = Vec::new();
+    let mut line = 0;
+
+    for token in tokens {
+        let mut current_lexeme = String::new();
+
+        for character in token.lexeme.chars() {
+            // Use characters in the visible range.
+            if visible_range.includes(line) {
+                current_lexeme.push(character);
+            }
+
+            // Handle newline characters.
+            if character == '\n' {
+                line += 1;
+            }
+        }
+
+        // Add visible lexemes to the token set.
+        if !current_lexeme.is_empty() {
+            visible_tokens.push(Token{
+                lexeme: current_lexeme,
+                category: token.category.clone()
+            })
+        }
+    }
+
+    visible_tokens
 }
